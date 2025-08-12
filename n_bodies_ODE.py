@@ -2,6 +2,7 @@ from scipy.integrate import ode
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+from tqdm import tqdm
 
 class Body:
     def __init__(self, mass, position, velocity):
@@ -88,12 +89,13 @@ def solve(dt, t_max, y0):
     print(f"YS: {ys[0]}")
     print(ys.shape)
 
-
-    while solver.successful() and step < n_steps:
-        solver.integrate(solver.t + dt)
-        ts[step] = solver.t
-        ys[step] = solver.y
-        step += 1
+    with tqdm(total = n_steps - 1, desc = "Calculation Progress", unit = "step", dynamic_ncols = True, ascii = True, leave = True) as pbar:
+        while solver.successful() and step < n_steps:
+            solver.integrate(solver.t + dt)
+            ts[step] = solver.t
+            ys[step] = solver.y
+            step += 1
+            pbar.update(1)
 
     rs1 = ys[:, :3]
     return ts, ys
@@ -103,11 +105,11 @@ def n_body_diffy_q(t, y):
     n = len(universe.bodies)
     G = universe.G
     positions = y[:3*n].reshape((n, 3))
-    print(f'Posiions shape: {positions.shape}')
+    # print(f'Posiions shape: {positions.shape}')
     velocities = y[3*n:].reshape((n, 3))
   
     accelerations = np.zeros_like(positions)
-    print(f'Accelerations shape: {accelerations.shape}')
+    # print(f'Accelerations shape: {accelerations.shape}')
     for i in range(n):
         for j in range(n):
             if i != j:
@@ -144,24 +146,25 @@ if __name__ == '__main__':
 
     universe.calculate_velocity2()
     
-    for i, b in enumerate(universe.bodies):
-        print(f"Body {i}: pos = {b.position}, vel = {b.velocity}")
+    # for i, b in enumerate(universe.bodies):
+        # print(f"Body {i}: pos = {b.position}, vel = {b.velocity}")
+
     y0 = np.array([])
     y0_positions = np.concatenate([b.position for b in universe.bodies])
     y0_velocitys = np.concatenate([b.velocity for b in universe.bodies])
     y0 = np.concatenate([y0_positions, y0_velocitys])
-    print('\n\n')
-    print(y0)
-    print('\n\n')
+    # print('\n\n')
+    # print(y0)
+    # print('\n\n')
 
-    print(f"Y0: {y0.shape}")
+    # print(f"Y0: {y0.shape}")
 
     dt = 10  
-    t_max = 12 * 30 * 24 * 3600  
+    t_max = 8 * 30 * 24 * 3600  
 
     ts, ys = solve(dt, t_max, y0)
-    print(f'Ys shape: {ys.shape}')
-    np.save('positions_N_bodies.npy', ys)
+    # print(f'Ys shape: {ys.shape}')
+    # np.save('positions_N_bodies.npy', ys)
 
 
     

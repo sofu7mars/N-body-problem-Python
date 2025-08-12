@@ -47,7 +47,7 @@ def animate3d(earth, moon):
     # ax.scatter(0, 0, 0, color = 'orange', s = 100, label = 'Earth')
     def update_data(frame):
         nonlocal animation
-        if frame > 1000000:
+        if frame > 2000000:
             animation.event_source.stop()
         # print(f"Frame {frame}")
         # print("Body 1 pos:", rs[frame])
@@ -74,7 +74,7 @@ def animate3d(earth, moon):
     animation = FuncAnimation(
                                 fig = fig, 
                                 func = update_data,
-                                frames = range(0, len(sun), 10000),
+                                frames = range(0, len(sun), 5000),
                                 interval = 20,
                                 blit = False,    
     )
