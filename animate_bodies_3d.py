@@ -37,8 +37,8 @@ def animate3d(earth, moon):
     ax.set_ylim(y_min - abs(y_max - y_min) * padding_factor, y_max + abs(y_max - y_min) * padding_factor)
     ax.set_zlim(z_min - abs(z_max - z_min) * padding_factor, z_max + abs(z_max - z_min) * padding_factor)
 
-    # animated_orbit, = ax.plot([], [], [], color = 'blue')
-    # animated_body, = ax.plot([], [], [], 'o', markersize = 15, color = 'red')
+    animated_orbit, = ax.plot([], [], [], color = 'blue')
+    animated_body, = ax.plot([], [], [], 'o', markersize = 15, color = 'red')
     animated_orbit1, = ax.plot([], [], [], color = 'blue')
     animated_body1, = ax.plot([], [], [], 'o', markersize = 8, color = 'yellow')
     animated_orbit2, = ax.plot([], [], [], color = 'blue')
@@ -52,10 +52,10 @@ def animate3d(earth, moon):
         # print(f"Frame {frame}")
         # print("Body 1 pos:", rs[frame])
         # print("Body 2 pos:", rs1[frame])
-        # animated_orbit.set_data(sun[:frame, 0], sun[:frame, 1])
-        # animated_orbit.set_3d_properties(sun[:frame, 2])
-        # animated_body.set_data(sun[frame, 0], sun[frame, 1])
-        # animated_body.set_3d_properties(sun[frame, 2])
+        animated_orbit.set_data(sun[:frame, 0], sun[:frame, 1])
+        animated_orbit.set_3d_properties(sun[:frame, 2])
+        animated_body.set_data(sun[frame, 0], sun[frame, 1])
+        animated_body.set_3d_properties(sun[frame, 2])
 
         animated_orbit1.set_data(earth[:frame, 0], earth[:frame, 1])
         animated_orbit1.set_3d_properties(earth[:frame, 2])
@@ -69,12 +69,12 @@ def animate3d(earth, moon):
 
 
         
-        return animated_body1, animated_orbit1, animated_body2, animated_orbit2
+        return animated_body, animated_orbit, animated_body1, animated_orbit1, animated_body2, animated_orbit2
 
     animation = FuncAnimation(
                                 fig = fig, 
                                 func = update_data,
-                                frames = range(0, len(sun), 1000),
+                                frames = range(0, len(sun), 10000),
                                 interval = 20,
                                 blit = False,    
     )
