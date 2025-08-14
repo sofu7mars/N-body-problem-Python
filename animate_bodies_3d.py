@@ -19,15 +19,15 @@ def plot2d(array):
     plt.grid(True)
     plt.show()
 
-def animate3d(earth, moon):
+def animate3d(sun, earth, moon):
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection = '3d')
-    padding_factor = 0.5
+    padding_factor = 1
 
 
 
-    all_positions = np.vstack((earth, moon))
+    all_positions = np.vstack((sun, earth, moon))
 
     x_min, x_max = np.min(all_positions[:, 0]), np.max(all_positions[:, 0])
     y_min, y_max = np.min(all_positions[:, 1]), np.max(all_positions[:, 1])
@@ -37,11 +37,11 @@ def animate3d(earth, moon):
     ax.set_ylim(y_min - abs(y_max - y_min) * padding_factor, y_max + abs(y_max - y_min) * padding_factor)
     ax.set_zlim(z_min - abs(z_max - z_min) * padding_factor, z_max + abs(z_max - z_min) * padding_factor)
 
-    animated_orbit, = ax.plot([], [], [], color = 'blue')
+    animated_orbit, = ax.plot([], [], [], color = 'red')
     animated_body, = ax.plot([], [], [], 'o', markersize = 15, color = 'red')
-    animated_orbit1, = ax.plot([], [], [], color = 'blue')
+    animated_orbit1, = ax.plot([], [], [], color = 'yellow')
     animated_body1, = ax.plot([], [], [], 'o', markersize = 8, color = 'yellow')
-    animated_orbit2, = ax.plot([], [], [], color = 'blue')
+    animated_orbit2, = ax.plot([], [], [], color = 'green')
     animated_body2, = ax.plot([], [], [], 'o', markersize = 4, color = 'green')
 
     # ax.scatter(0, 0, 0, color = 'orange', s = 100, label = 'Earth')
@@ -74,7 +74,7 @@ def animate3d(earth, moon):
     animation = FuncAnimation(
                                 fig = fig, 
                                 func = update_data,
-                                frames = range(0, len(sun), 5000),
+                                frames = range(0, len(sun)),
                                 interval = 20,
                                 blit = False,    
     )
@@ -87,6 +87,7 @@ if __name__ == '__main__':
     sun = ys[:, :3]
     earth = ys[:, 3:6]
     moon = ys[:, 6:9]
+    print(ys.shape)
     plot2d(earth)
-    animate3d(earth, moon)
+    animate3d(sun, earth, moon)
     
