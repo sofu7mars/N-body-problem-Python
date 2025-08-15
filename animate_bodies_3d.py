@@ -23,7 +23,7 @@ def animate3d(sun, earth, moon):
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection = '3d')
-    padding_factor = 1
+    padding_factor = 0.01
 
 
 
@@ -82,7 +82,7 @@ def animate3d(sun, earth, moon):
     plt.show()
 
 if __name__ == '__main__':
-    ys = np.load('positions_N_bodies.npy')
+    ys = np.load('positions_N_bodies.npy')  
     
     sun = ys[:, :3]
     earth = ys[:, 3:6]
