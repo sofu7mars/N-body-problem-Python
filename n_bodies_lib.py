@@ -25,6 +25,16 @@ class Universe:
     def add_body(self, body):
         self.bodies.append(body)
 
+    def create_N_bodies_with_random_pos_vel(self, n_bodies, mass = 1, masses = []):
+        if n_bodies != len(masses):
+            raise Exception("WARNING: Masses more than bodies")
+        for _, mass in zip(range(n_bodies), masses):
+            body = Body(
+            mass = mass,
+            position = [2 * (random.random() - 1), 2 * random.random() - 1, 2 * random.random() -1],
+            velocity = [0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1)]) 
+            self.add_body(body)
+
     def total_mass(self):
         return sum(b.mass for b in self.bodies)
     
@@ -71,25 +81,6 @@ class Universe:
         v_moon = np.sqrt(G * self.bodies[1].mass / r_moon)
         self.bodies[2].velocity = self.bodies[1].velocity + np.array([0, v_moon, 0])
 
-    def n_body_diffy_q(self, t, y):
-        n = len(self.bodies)
-        
-        positions = y[:3*n].reshape((n, 3))
-        # print(f'Posiions shape: {positions.shape}')
-        velocities = y[3*n:].reshape((n, 3))
-    
-        accelerations = np.zeros_like(positions)
-        # print(f'Accelerations shape: {accelerations.shape}')
-        for i in range(n):
-            for j in range(n):
-                if i != j:
-                    r_vec = positions[j] - positions[i]
-                    dist = np.linalg.norm(r_vec)
-                    accelerations[i] += -self.G * self.bodies[j].mass * r_vec / dist**3
-
-        dydt = np.concatenate((velocities.flatten(), accelerations.flatten()))
-        return dydt
-
     def n_body_diffy1(self, t, y):
         
         n = len(self.bodies)
@@ -107,9 +98,31 @@ class Universe:
 
         dydt = np.concatenate((velocities.flatten(), accelerations.flatten()))
         return dydt
+    
+    def n_body_diffy_vectorized(self, t, y):
+ 
+        n = len(self.bodies)
+        positions = y[:3*n].reshape((n, 3))
+        velocities = y[3*n:].reshape((n, 3))
+
+        accelerations = np.zeros_like(positions)
+        
+        r = positions[:, np.newaxis, :] - positions[np.newaxis, :, :]
+        distance = np.linalg.norm(r, axis = 2) + 1e-10
+
+        np.fill_diagonal(distance, np.inf)
+
+        inv_dist3 = 1.0 / distance ** 3
+
+        masses = np.array([body.mass for body in self.bodies])  
+
+        accelerations = -self.G * np.einsum('j,ijk->ik', masses, r * inv_dist3[:, :, np.newaxis])
+
+        dydt = np.concatenate((velocities.flatten(), accelerations.flatten()))
+        return dydt
      
     def init_solver(self, y0):
-        solver = ode(self.n_body_diffy1)
+        solver = ode(self.n_body_diffy_vectorized)
         solver.set_integrator('lsoda')
         solver.set_initial_value(y0, 0)
         return solver
@@ -146,7 +159,7 @@ class Universe:
         np.save('positions_N_bodies.npy', self.ys)
         return self.ts, self.ys
     
-    def animate3d(self, trace_lines = True, padding_factor = 10):
+    def animate3d(self, trace_lines = True, fading_trace_lines = True, padding_factor = 0, track_body_index = None):
         
         fig = plt.figure()
         ax = fig.add_subplot(111, projection = '3d')
@@ -171,15 +184,17 @@ class Universe:
         used_colors = set()
         available_colors = list(set(colors) - used_colors)
         n_bodies = len(self.bodies)
-        for _ in self.bodies:
+        for i, _ in enumerate(self.bodies):
             available_colors = list(set(colors) - used_colors)
             if available_colors:
                 c = random.choice(available_colors)
                 used_colors.add(c)
             else:
                 c = random.choice(colors)
-                
-            body_line, = ax.plot([], [], [], 'o', markersize = 2, color = c)
+            if track_body_index == i:
+                body_line, = ax.plot([], [], [], 'o', markersize = 5, color = c)
+            else:
+                body_line, = ax.plot([], [], [], 'o', markersize = 2, color = c)
             animated_bodies.append(body_line)
             if trace_lines:
                 orbit_line, = ax.plot([], [], [], color = c)
@@ -190,9 +205,19 @@ class Universe:
                 animated_body.set_data(self.ys[frame, i * 3], self.ys[frame, i * 3 + 1])
                 animated_body.set_3d_properties(self.ys[frame, i * 3 + 2])
             if trace_lines:
+                if fading_trace_lines:
+                    start = max(0, frame - len(self.ys) // 15)
                 for i, animated_orbit in enumerate(animated_orbits):
-                    animated_orbit.set_data(self.ys[:frame, i * 3], self.ys[:frame, i * 3 + 1])
-                    animated_orbit.set_3d_properties(self.ys[:frame, i * 3 + 2])
+                    animated_orbit.set_data(self.ys[start : frame, i * 3], 
+                                            self.ys[start : frame, i * 3 + 1])
+                    animated_orbit.set_3d_properties(self.ys[start : frame, i * 3 + 2])
+            
+            if track_body_index != None:
+                x, y, z = self.ys[frame, track_body_index * 3 : track_body_index * 3 + 3]
+                padding = 1.0
+                ax.set_xlim(x - padding, x + padding)
+                ax.set_ylim(y - padding, y + padding)
+                ax.set_zlim(z - padding, z + padding)
 
             return animated_bodies, animated_orbits
 
@@ -200,7 +225,7 @@ class Universe:
                 fig = fig,
                 func = update_frame,
                 frames = range(0, len(self.ys)),
-                interval = 20, 
+                interval = 40, 
                 blit = False,
         )
         plt.show()

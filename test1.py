@@ -1,34 +1,13 @@
 from n_bodies_lib import Universe, Body
 import random
+import cProfile
 
 if __name__ == '__main__':
 
-    universe = Universe(1, 30, 0.01)
+    universe = Universe(1, 10, 0.01)
 
-    sun = Body(
-        mass = 1,
-        position = [2 * (random.random() - 1), 2 * random.random() - 1, 2 * random.random() -1],
-        velocity = [0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1)]
-    )
-    print(sun.position)
+    universe.create_N_bodies_with_random_pos_vel(n_bodies = 4, masses = [1.7, 5, 2.5, 2.1])
 
-    earth = Body(
-        mass = 0.1,
-        position = [2 * (random.random() - 1), 2 * random.random() - 1, 2 * random.random() -1],
-        velocity = [0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1)]
-    )
-    print(earth.position)
-
-    moon = Body(
-        mass = 2,
-        position = [2 * (random.random() - 1), 2 * random.random() - 1, 2 * random.random() -1],
-        velocity = [0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1)]
-    )
-
-    universe.add_body(sun)
-    universe.add_body(earth)
-    universe.add_body(moon)
 
     universe.solve()
-
-    universe.animate3d()
+    universe.animate3d(True, True, 0.00, 1)
