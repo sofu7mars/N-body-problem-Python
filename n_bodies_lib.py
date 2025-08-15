@@ -28,7 +28,10 @@ class Universe:
 
     def create_N_bodies_with_random_pos_vel(self, n_bodies, mass = 1, masses = []):
         if n_bodies != len(masses):
-            raise Exception("WARNING: Masses more than bodies")
+            raise Exception(f"WARNING: Masses more than bodies \nNumber of bodies: {n_bodies}, number of masses: {len(masses)}")
+        self.G = 1
+        self.t = 30
+        self.dt = 0.01
         for i, mass in zip(range(n_bodies), masses):
             body = Body(
             name = str(i + 1),
@@ -195,7 +198,9 @@ class Universe:
         np.save('positions_N_bodies.npy', self.ys)
         return self.ts, self.ys
     
-    def plot2d(self, axises = 'xy', body_index = 0):
+    def plot2d(self, file = None, axises = 'xy', body_index = 0):
+        if file != None:
+            self.ys = np.load(file)
         match axises:
             case 'xy':
                 axis_1 = self.ys[:, body_index * 3]
@@ -250,9 +255,13 @@ class Universe:
                 plt.grid(True)
         plt.show()
 
-    def animate3d(self, trace_lines = True, fading_trace_lines = True, 
-                padding_factor = 0, track_body_index = None, animation_step = 1):
-        
+    def animate3d(
+                self, file = None, trace_lines = True, fading_trace_lines = True,
+                trace_length_dev = 15, padding_factor = 0, track_body_index = None, 
+                animation_step = 1, 
+        ):
+        if file != None:
+            self.ys = np.load(file)
         fig = plt.figure()
         ax = fig.add_subplot(111, projection = '3d')
 
@@ -304,7 +313,7 @@ class Universe:
                 animated_body.set_3d_properties(self.ys[frame, i * 3 + 2])
             if trace_lines:
                 if fading_trace_lines:
-                    start = max(0, frame - len(self.ys) // 10)
+                    start = max(0, frame - len(self.ys) // trace_length_dev)
                 for i, animated_orbit in enumerate(animated_orbits):
                     animated_orbit.set_data(self.ys[start : frame, i * 3], 
                                             self.ys[start : frame, i * 3 + 1])
