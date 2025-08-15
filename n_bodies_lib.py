@@ -7,7 +7,8 @@ from matplotlib.animation import FuncAnimation
 import random
 
 class Body:
-    def __init__(self, mass, position, velocity):
+    def __init__(self, name, mass, position, velocity):
+        self.name = name
         self.mass = mass
         self.position = np.array(position, dtype = float)
         self.velocity = np.array(velocity, dtype = float)
@@ -28,8 +29,9 @@ class Universe:
     def create_N_bodies_with_random_pos_vel(self, n_bodies, mass = 1, masses = []):
         if n_bodies != len(masses):
             raise Exception("WARNING: Masses more than bodies")
-        for _, mass in zip(range(n_bodies), masses):
+        for i, mass in zip(range(n_bodies), masses):
             body = Body(
+            name = str(i + 1),
             mass = mass,
             position = [2 * (random.random() - 1), 2 * random.random() - 1, 2 * random.random() -1],
             velocity = [0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1), 0.1 * (2 * random.random() -1)]) 
@@ -120,13 +122,48 @@ class Universe:
 
         dydt = np.concatenate((velocities.flatten(), accelerations.flatten()))
         return dydt
-     
+    
+    def earth_and_moon(self):
+        self.add_body(Body(
+            name = 'Earth',
+            mass = 5.972e24,
+            position = [0, 0, 0],
+            velocity = [0, 0, 0]
+        ))
+        self.add_body(Body(
+            name = 'Moon',
+            mass = 7.348e22,
+            position = [3.844e8, 0, 0],
+            velocity = [0, 1022.0, 0]
+        ))
+    
+    def sun_earth_moon(self):
+        self.add_body(Body(
+            name = 'Sun',
+            mass = 1.989e30,
+            position = [0, 0, 0],
+            velocity = [0, 0, 0]
+        ))
+
+        self.add_body(Body(
+            name = 'Earth',
+            mass = 5.972e24,
+            position = [1.496e11, 0, 0],
+            velocity = [0, 29784.8, 0]
+        ))
+        self.add_body(Body(
+            name = 'Moon',
+            mass = 7.348e22,
+            position = [3.844e8 + 1.496e11, 0, 0],
+            velocity = [0, 1022.0 + 29784.8, 0]
+        ))
+
     def init_solver(self, y0):
         solver = ode(self.n_body_diffy_vectorized)
         solver.set_integrator('lsoda')
         solver.set_initial_value(y0, 0)
         return solver
-    
+        
     def solve(self):
         y0 = np.array([])
         y0_positions = np.concatenate([b.position for b in self.bodies])
@@ -140,7 +177,7 @@ class Universe:
         self.ts = np.zeros(n_steps)
 
         solver = self.init_solver(y0)
-        print(f"Solver Y shape: {solver.y.shape}")
+        # print(f"Solver Y shape: {solver.y.shape}")
         self.ys[0] = y0
         self.ts[0] = 0
         step = 1
@@ -155,10 +192,64 @@ class Universe:
                 step += 1
                 pbar.update(1)
 
-        rs1 = self.ys[:, :3]
         np.save('positions_N_bodies.npy', self.ys)
         return self.ts, self.ys
     
+    def plot2d(self, axises = 'xy', body_index = 0):
+        match axises:
+            case 'xy':
+                axis_1 = self.ys[:, body_index * 3]
+                axis_2 = self.ys[:, body_index * 3 + 1]
+                plt.figure(figsize=(8, 8))
+                plt.plot(axis_1, axis_2, label=self.bodies[body_index].name + ' orbit')
+                if body_index > 0:
+                    plt.scatter(
+                            0, 0, color='orange', 
+                            label = self.bodies[body_index - 1].name, 
+                            s=100
+                    )
+                plt.xlabel('X (m)')
+                plt.ylabel('Y (m)')
+                plt.title('2D orbit plot')
+                plt.axis('equal')
+                plt.legend()
+                plt.grid(True)
+            case 'yz':
+                axis_1 = self.ys[:, body_index * 3 + 1]
+                axis_2 = self.ys[:, body_index * 3 + 2]
+                plt.figure(figsize=(8, 8))
+                plt.plot(axis_1, axis_2, label=self.bodies[body_index].name + ' orbit')
+                if body_index > 0:
+                    plt.scatter(
+                            0, 0, color='orange', 
+                            label = self.bodies[body_index - 1].name, 
+                            s=100
+                    )               
+                plt.xlabel('Y (m)')
+                plt.ylabel('Z (m)')
+                plt.title('2D orbit plot')
+                plt.axis('equal')
+                plt.legend()
+                plt.grid(True)
+            case 'xz':
+                axis_1 = self.ys[:, body_index * 3]
+                axis_2 = self.ys[:, body_index * 3 + 2]
+                plt.figure(figsize=(8, 8))
+                plt.plot(axis_1, axis_2, label=self.bodies[body_index].name + ' orbit')
+                if body_index > 0:
+                    plt.scatter(
+                            0, 0, color='orange', 
+                            label = self.bodies[body_index - 1].name, 
+                            s=100
+                    )
+                plt.xlabel('X (m)')
+                plt.ylabel('Z (m)')
+                plt.title('2D orbit plot')
+                plt.axis('equal')
+                plt.legend()
+                plt.grid(True)
+        plt.show()
+
     def animate3d(self, trace_lines = True, fading_trace_lines = True, 
                 padding_factor = 0, track_body_index = None, animation_step = 1):
         
@@ -178,8 +269,8 @@ class Universe:
             ax.set_ylim(y_min - abs(y_max - y_min) * padding_factor, 
                         y_max + abs(y_max - y_min) * padding_factor)
 
-            ax.set_zlim(z_min - abs(z_max - z_min) * padding_factor, 
-                        z_max + abs(z_max - z_min) * padding_factor)
+            ax.set_zlim(z_min - abs(z_max - z_min) * padding_factor - 1, 
+                        z_max + abs(z_max - z_min) * padding_factor + 1)
         else:
             x_min, x_max = np.min(self.ys[:, (track_body_index + 1) * 3]), np.max(self.ys[:, (track_body_index + 1) * 3])
             y_min, y_max = np.min(self.ys[:, (track_body_index + 1) * 3 + 1]), np.max(self.ys[:, (track_body_index +1) * 3 + 1])
@@ -213,7 +304,7 @@ class Universe:
                 animated_body.set_3d_properties(self.ys[frame, i * 3 + 2])
             if trace_lines:
                 if fading_trace_lines:
-                    start = max(0, frame - len(self.ys) // 15)
+                    start = max(0, frame - len(self.ys) // 10)
                 for i, animated_orbit in enumerate(animated_orbits):
                     animated_orbit.set_data(self.ys[start : frame, i * 3], 
                                             self.ys[start : frame, i * 3 + 1])
