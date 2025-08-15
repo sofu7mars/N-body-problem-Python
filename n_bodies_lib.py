@@ -159,24 +159,31 @@ class Universe:
         np.save('positions_N_bodies.npy', self.ys)
         return self.ts, self.ys
     
-    def animate3d(self, trace_lines = True, fading_trace_lines = True, padding_factor = 0, track_body_index = None):
+    def animate3d(self, trace_lines = True, fading_trace_lines = True, 
+                padding_factor = 0, track_body_index = None, animation_step = 1):
         
         fig = plt.figure()
         ax = fig.add_subplot(111, projection = '3d')
 
         all_positions = self.ys.reshape(-1, 3)
-        x_min, x_max = np.min(all_positions[:, 0]), np.max(all_positions[:, 0])
-        y_min, y_max = np.min(all_positions[:, 1]), np.max(all_positions[:, 1])
-        z_min, z_max = np.min(all_positions[:, 2]), np.max(all_positions[:, 2])
 
-        ax.set_xlim(x_min - abs(x_max - x_min) * padding_factor,
-                    x_max + abs(x_max - x_min) * padding_factor)
+        if track_body_index == None:
+            x_min, x_max = np.min(all_positions[:, 0]), np.max(all_positions[:, 0])
+            y_min, y_max = np.min(all_positions[:, 1]), np.max(all_positions[:, 1])
+            z_min, z_max = np.min(all_positions[:, 2]), np.max(all_positions[:, 2])
 
-        ax.set_ylim(y_min - abs(y_max - y_min) * padding_factor, 
-                    y_max + abs(y_max - y_min) * padding_factor)
+            ax.set_xlim(x_min - abs(x_max - x_min) * padding_factor,
+                        x_max + abs(x_max - x_min) * padding_factor)
 
-        ax.set_zlim(z_min - abs(z_max - z_min) * padding_factor, 
-                    z_max + abs(z_max - z_min) * padding_factor)
+            ax.set_ylim(y_min - abs(y_max - y_min) * padding_factor, 
+                        y_max + abs(y_max - y_min) * padding_factor)
+
+            ax.set_zlim(z_min - abs(z_max - z_min) * padding_factor, 
+                        z_max + abs(z_max - z_min) * padding_factor)
+        else:
+            x_min, x_max = np.min(self.ys[:, (track_body_index + 1) * 3]), np.max(self.ys[:, (track_body_index + 1) * 3])
+            y_min, y_max = np.min(self.ys[:, (track_body_index + 1) * 3 + 1]), np.max(self.ys[:, (track_body_index +1) * 3 + 1])
+            z_min, z_max = np.min(self.ys[:, (track_body_index + 1)* 3 + 2]), np.max(self.ys[:, (track_body_index + 1) * 3 + 2])
 
         animated_bodies = []
         animated_orbits = []
@@ -214,17 +221,17 @@ class Universe:
             
             if track_body_index != None:
                 x, y, z = self.ys[frame, track_body_index * 3 : track_body_index * 3 + 3]
-                padding = 1.0
-                ax.set_xlim(x - padding, x + padding)
-                ax.set_ylim(y - padding, y + padding)
-                ax.set_zlim(z - padding, z + padding)
+
+                ax.set_xlim(x - padding_factor, x + padding_factor)
+                ax.set_ylim(y - padding_factor, y + padding_factor)
+                ax.set_zlim(z - padding_factor, z + padding_factor)
 
             return animated_bodies, animated_orbits
 
         animation = FuncAnimation(
                 fig = fig,
                 func = update_frame,
-                frames = range(0, len(self.ys)),
+                frames = range(0, len(self.ys), animation_step),
                 interval = 40, 
                 blit = False,
         )

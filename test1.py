@@ -10,4 +10,4 @@ if __name__ == '__main__':
 
 
     universe.solve()
-    universe.animate3d(True, True, 0.00, 1)
+    universe.animate3d(True, True, 0.00)
