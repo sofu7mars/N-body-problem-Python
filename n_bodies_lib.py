@@ -21,6 +21,8 @@ class Universe:
         self.bodies = []
         self.ys = []
         self.ts = []
+        self.file_name = 'positions_N_bodies.npy'
+        
         
 
     def add_body(self, body):
@@ -195,12 +197,12 @@ class Universe:
                 step += 1
                 pbar.update(1)
 
-        np.save('positions_N_bodies.npy', self.ys)
+        np.save(self.file_name, self.ys)
         return self.ts, self.ys
     
-    def plot2d(self, file = None, axises = 'xy', body_index = 0):
-        if file != None:
-            self.ys = np.load(file)
+    def plot2d(self, from_file = False, axises = 'xy', body_index = 0):
+        if from_file:
+            self.ys = np.load(self.file_name)
         match axises:
             case 'xy':
                 axis_1 = self.ys[:, body_index * 3]
@@ -256,15 +258,21 @@ class Universe:
         plt.show()
 
     def animate3d(
-                self, file = None, trace_lines = True, fading_trace_lines = True,
+                self, from_file = False, trace_lines = True, fading_trace_lines = True,
                 trace_length_dev = 15, padding_factor = 0, track_body_index = None, 
                 animation_step = 1, 
         ):
-        if file != None:
-            self.ys = np.load(file)
+        if from_file:
+            self.ys = np.load(self.file_name)
         fig = plt.figure()
         ax = fig.add_subplot(111, projection = '3d')
-
+        masses = np.array([b.mass for b in self.bodies], dtype = float)
+        print(masses)
+        if masses.max() != masses.min():
+            sizes = 1 + 9 * (masses - masses.min()) / (masses.max() - masses.min())
+        else:
+            sizes = np.full_like(masses, 5)
+        print(sizes)
         all_positions = self.ys.reshape(-1, 3)
 
         if track_body_index == None:
@@ -301,7 +309,7 @@ class Universe:
             if track_body_index == i:
                 body_line, = ax.plot([], [], [], 'o', markersize = 5, color = c)
             else:
-                body_line, = ax.plot([], [], [], 'o', markersize = 2, color = c)
+                body_line, = ax.plot([], [], [], 'o', markersize = sizes[i], color = c)
             animated_bodies.append(body_line)
             if trace_lines:
                 orbit_line, = ax.plot([], [], [], color = c)
