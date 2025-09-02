@@ -2,7 +2,7 @@ from scipy.integrate import ode
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-# from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 from matplotlib.animation import FuncAnimation
 import random
@@ -265,8 +265,10 @@ class Universe:
         ):
         if from_file:
             self.ys = np.load(self.file_name)
-        fig = plt.figure()
+        fig = plt.figure(figsize = (12, 8))
         ax = fig.add_subplot(111, projection = '3d')
+        plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+        plt.tight_layout()
         masses = np.array([b.mass for b in self.bodies], dtype = float)
         print(masses)
         if masses.max() != masses.min():
