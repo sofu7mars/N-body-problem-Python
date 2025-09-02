@@ -2,6 +2,7 @@ from scipy.integrate import ode
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+# from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 from matplotlib.animation import FuncAnimation
 import random
@@ -297,6 +298,7 @@ class Universe:
         animated_orbits = []
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
         used_colors = set()
+        start = 0
         available_colors = list(set(colors) - used_colors)
         n_bodies = len(self.bodies)
         for i, _ in enumerate(self.bodies):
