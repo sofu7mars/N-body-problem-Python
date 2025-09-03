@@ -9,11 +9,11 @@ if __name__ == '__main__':
     universe.create_N_bodies_with_random_pos_vel(n_bodies = 4, masses = [1.7, 5, 2.5, 2.1])
 
 
-    universe.solve()
+#     universe.solve()
     universe.animate3d(
-            from_file = False,
+            from_file = True,
             trace_length_dev = 25,
-            padding_factor = 0,
-            track_body_index = None,
+            padding_factor = 1,
+            track_body_index = 1,
             animation_step = 1
     )
