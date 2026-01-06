@@ -321,7 +321,7 @@ class Universe:
         
         def update_frame(frame):
             for i, animated_body in enumerate(animated_bodies):
-                animated_body.set_data(self.ys[frame, i * 3], self.ys[frame, i * 3 + 1])
+                animated_body.set_data([self.ys[frame, i * 3]], [self.ys[frame, i * 3 + 1]])
                 animated_body.set_3d_properties(self.ys[frame, i * 3 + 2])
             if trace_lines:
                 if fading_trace_lines:
